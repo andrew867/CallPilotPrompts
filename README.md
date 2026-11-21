@@ -1,5 +1,7 @@
 # CallPilotPrompts
 
+**First alpha** · [v0.1.0-alpha.1](https://github.com/andrew867/CallPilotPrompts/releases/tag/v0.1.0-alpha.1) · [Release notes](CHANGELOG.md)
+
 Factory-prompt format research and extraction for Nortel CallPilot and Norstar Voice Mail / NAM. This repository covers the BCM 4.0 Linux CallPilot speech banks and the separate IVR MMF V3 banks in the same image.
 
 ## Extract CallPilot 5.0 audio
