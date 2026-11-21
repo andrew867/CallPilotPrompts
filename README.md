@@ -1,25 +1,28 @@
 # CallPilotPrompts
 
-Research and conversion of factory prompts from Nortel CallPilot and Norstar Voice Mail / NAM. The companion [Asterisk prompt checklist](https://github.com/andrew867/JoanKenley-asterisk/blob/main/prompts.csv) identifies the phrases that would be most useful to recover.
+Factory-prompt format research and extraction for Nortel CallPilot and Norstar Voice Mail / NAM. This repository covers the BCM 4.0 Linux CallPilot speech banks and the separate IVR MMF V3 banks in the same image.
 
-## First sample
+## Extract BCM 4.0 audio
 
-The inventory script uses Python 3.11 or newer.
+Use Python 3.11 or newer. Install FFmpeg on `PATH` for A-law output.
 
-- Record the product name, release, platform and language. Keep the original prompt filenames, directory structure and any nearby indexes or manifests.
-- Start with a factory prompt directory and a few clips with known wording. A short digit, a voicemail menu prompt and a longer greeting give useful comparisons. Keep production mailbox data and customer recordings outside the sample.
-- Keep the source files byte-for-byte. Use the inventory to record relative names, sizes, SHA-256 digests and the first 32 bytes before trying a decode.
-
-```sh
-python inventory.py intake/callpilot > callpilot-inventory.json
+```powershell
+python inventory.py intake/bcm4 > build/bcm4-intake-inventory.json
+python extract_bcm4.py intake/bcm4/part6/nn/CallPilot/prmptupd/lang_0 build/bcm4-en-us
+python extract_mmf.py intake/bcm4/part6/nn/ivr/mmf/numset.mmi build/bcm4-mmf/numset
 ```
 
-`intake/` and `build/` are local working directories. Keep generated inventories with the corresponding samples.
+Create the `build` folder before redirecting the inventory. Use a new output directory for each extraction. Both extractors default to 8 kHz mono PCM WAV, raw μ-law and raw A-law. To omit A-law, pass `--format wav --format ulaw`. `--index-only` writes indexes and manifests without audio.
 
-## Format and outputs
+- `extract_bcm4.py` reads `phrase_s` and the companion files if present. Its output includes `phrases.csv`, `manifest.json`, `templates.csv`, and `display.csv`. `lang_0` is labeled American English. Its μ-law exports preserve the stored clip bytes.
+- `extract_mmf.py` reads the adjacent `.mmi` and `.mmd` files. The output includes `elements.csv` with the named element IDs, source page offsets, and hashes. Unconverted codec payloads are written as original `.bin` slices.
 
-The first vendor samples are pending. The Dialogic ADPCM family is a candidate. Identify any container, sample rate, block boundaries, nibble order and restart state from the bytes and compare the results with known prompt playback before committing to a decoder. Keep CallPilot server and NAM formats distinct if samples show differences.
+The [BCM 4.0 format notes](BCM4_FORMAT.md) document the indexes, audio byte layout, native-library checks, and open questions.
 
-Keep the verified PCM WAV at its decoded sample rate. Produce 8 kHz mono `.ulaw` and `.alaw` derivatives for telephony playback. Record each output's source digest, the decoder version and settings, and keep the factory language and prompt identifier with the transcription. A WAV made from a compressed prompt is a decoded copy of that prompt.
+## Asterisk candidates
 
-[CallPilot 4.0 Administrator's Guide](https://www.tandemdata.com/Manuals/Nortel/Call%20Pilot/CP%204.0%20Administrator%27s%20Guide.pdf) documents customization and WAV import. Its import interface leaves the factory prompt storage format open.
+[asterisk-candidates.csv](asterisk-candidates.csv) proposes matches against gaps in the [JoanKenley-asterisk prompt checklist](https://github.com/andrew867/JoanKenley-asterisk/blob/main/prompts.csv). `audio_path` is relative to the `build` directory created by the commands above. Labels and spot transcriptions identify likely wording. Listen for the intended wording, pronunciation, level, and speaker before moving clips into the pack. The DMS mappings take priority in the companion project.
+
+## Intake
+
+Keep each release and platform in its own intake directory. Preserve original filenames, prompt indexes and paths, and record file hashes using `inventory.py`. Use factory files without mailbox or customer recordings. The vendor files and generated audio belong in the local `intake/` and `build/` directories.
