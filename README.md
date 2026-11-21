@@ -2,6 +2,10 @@
 
 Factory-prompt format research and extraction for Nortel CallPilot and Norstar Voice Mail / NAM. This repository covers the BCM 4.0 Linux CallPilot speech banks and the separate IVR MMF V3 banks in the same image.
 
+## Extract CallPilot 5.0 audio
+
+The two-disc CallPilot 5.0 language CD uses numbered Nortel SBC files. The Canadian English bank has 2,735 playable prompts. The extractor uses the original 32-bit Windows codec with the locally supplied language archive. See the [CallPilot 5.0 byte layout and extraction steps](CALLPILOT5_FORMAT.md).
+
 ## Extract BCM 4.0 audio
 
 Use Python 3.11 or newer. Install FFmpeg on `PATH` for A-law output.
