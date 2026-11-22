@@ -18,7 +18,7 @@ mkdir -p build
 cc -std=c11 -O2 -fPIC -shared nortel_sbc.c -o build/libnortel_sbc.so
 ~~~
 
-On macOS, use `cc -std=c11 -O2 -dynamiclib nortel_sbc.c -o build/libnortel_sbc.dylib`. Use the filename for your platform in the commands below. Python 3.11 or newer provides all the required modules.
+On macOS, create the build directory and run `cc -std=c11 -O2 -dynamiclib nortel_sbc.c -o build/libnortel_sbc.dylib`. Use the library filename for your platform in the commands below. The tools use Python 3.11 or newer and its standard library. Release validation ran on Windows x86 and x64.
 
 ## Convert a file or extract a CD
 
@@ -28,7 +28,7 @@ python nortel_sbc.py encode input-8k.wav prompt.sbc --library build/nortel_sbc.d
 python extract_callpilot5.py "CallPilot 5.0 CD Language Image.zip" build/callpilot5-en-ca --sbc-library build/nortel_sbc.dll
 ~~~
 
-The encoder requires at least 240 input samples. Decoding returns a whole number of 256-sample frames, so a short final frame includes the codec's tail. The default stream uses the logical block lengths found on the CD. Use `--padded-blocks` for a file containing the DLL's fixed 8,192-byte buffer slots. This codec handles the documented 18 kbit/s raw stream. VBK packaging and other CallPilot codec modes need their own readers.
+The encoder requires at least 240 input samples. Decoding returns a whole number of 256-sample frames, so a short final frame includes the codec's tail. The default stream uses the logical block lengths found on the CD. Use `--padded-blocks` on encode or decode to select the DLL's fixed 8,192-byte buffer slots. This codec handles the documented 18 kbit/s raw stream. VBK packaging and other CallPilot codec modes need their own readers.
 
 ## Bitstream and filter arithmetic
 
@@ -44,7 +44,7 @@ The loader and wire layout are described in the [language CD format notes](CALLP
 
 ## Verify against the factory DLL
 
-The archived DLL has SHA-256 `c48eb80a73a91b268f78cafe8baffe0b8298ed28141a52fa71887058496be56d`. The PCM decoder entry is at RVA `0xDF20`; the PCM-to-SBC entry is at `0xDFF0`. Each encoder comparison uses the same input PCM on both implementations. SBC is lossy, so comparison with the original speech uses a shared decoding oracle.
+The archived DLL has SHA-256 `c48eb80a73a91b268f78cafe8baffe0b8298ed28141a52fa71887058496be56d`. The PCM decoder entry is at RVA `0xDF20`. The PCM-to-SBC entry is at `0xDFF0`. For decoder comparisons, both implementations receive the same SBC bytes and their PCM is compared. For encoder comparisons, both receive the same PCM and their SBC output is compared.
 
 - Decoding matched the factory PCM for 144,986 logical blocks across 34 locale banks, covering 86,706 playable prompts. The Canadian English extractor also produced a byte-identical prompt CSV with the portable backend.
 - The factory and portable encoders returned identical logical SBC bytes and identical padded buffers on 62 deterministic inputs from 240 to 32,768 samples. The vectors cover silence, impulses, tones, full-scale alternation, noise, and the boundary from one block to two.

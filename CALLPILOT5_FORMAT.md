@@ -16,7 +16,7 @@ Disc 1 has Canadian English `lang4105` and American English `lang1033`. Each has
 
 ## Stored blocks
 
-Each numbered speech file is a sequence of blocks. A little-endian 16-bit block size at offset 0 includes the size field itself. The next block starts at that offset plus the size. Full intervening blocks in this release are 8,176 bytes. The first logical block of Canadian `101` is 8,176 bytes and the second is 3,676 bytes. Padding in the tail belongs to the stored block. The decoder zero-pads each logical block to the 8,192-byte working buffer used by the native library.
+Each numbered speech file is a sequence of blocks. A little-endian 16-bit block size at offset 0 includes the size field itself. The next block starts at that offset plus the size. Full intervening blocks in this release are 8,176 bytes. The first logical block of Canadian `101` is 8,176 bytes and the second is 3,676 bytes. The portable backend reads those logical blocks directly. The factory DLL adapter pads each logical block to its 8,192-byte working buffer.
 
 Bytes 2 through 5 are zero. At offset 6, each group starts with a big-endian length of 150 bytes (`00 96`) for two frames or 78 bytes (`00 4E`) for a final single frame. Swap adjacent bytes in the group's payload to read four half-frame lengths and their data. Length `25` hex includes the length byte and 36 data bytes. In a single-frame group, two `01` lengths mark the empty halves. The block ends with `AD DE EF BE` and 66 zero bytes.
 
@@ -42,4 +42,4 @@ tar -xf web/audio_enu.exe NMCODEC.DLL
 py -3.13-32 extract_callpilot5.py "CallPilot 5.0 CD Language Image.zip" build/callpilot5-en-ca --codec NMCODEC.DLL
 ~~~
 
-Add `--locale 1033` and choose a new output directory for American English. The CSV records the source and PCM hashes, original and installed prompt IDs, and output frame counts. Vendor media, the DLL and the generated WAVs are kept local. [Asterisk pack builder](https://github.com/andrew867/JoanKenley-asterisk)
+Add `--locale 1033` and choose a new output directory for American English. The CSV records the source and PCM hashes, original source filenames, installed prompt IDs, and output frame counts. The manifest records the chosen backend's binary hash. Vendor media, the DLL and the generated WAVs are kept local. [Asterisk pack builder](https://github.com/andrew867/JoanKenley-asterisk)

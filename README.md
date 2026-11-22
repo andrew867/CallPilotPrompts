@@ -1,12 +1,18 @@
 # CallPilotPrompts
 
-**First alpha** · [v0.1.0-alpha.1](https://github.com/andrew867/CallPilotPrompts/releases/tag/v0.1.0-alpha.1) · [Release notes](CHANGELOG.md)
+**[v0.2.0](https://github.com/andrew867/CallPilotPrompts/releases/tag/v0.2.0)** · [Changelog](CHANGELOG.md)
 
-Factory-prompt format research and extraction for Nortel CallPilot and Norstar Voice Mail / NAM. This repository covers the BCM 4.0 Linux CallPilot speech banks and the separate IVR MMF V3 banks in the same image.
+Tools to extract factory prompts from the Nortel CallPilot 5.0 language CDs and BCM 4.0. The repository includes a portable encoder and decoder for CallPilot's 18 kbit/s SBC, plus extractors for BCM speech banks and IVR MMF V3 files.
 
 ## Extract CallPilot 5.0 audio
 
-The two-disc CallPilot 5.0 language CD uses numbered Nortel SBC files. The Canadian English bank has 2,735 playable prompts. The portable C codec can decode the archived 18 kbit/s blocks and encode new 8 kHz mono recordings in the same format. The extractor accepts the portable library or the original 32-bit Windows codec. [Build and use the codec](NORTEL_SBC.md) · [Language CD layout](CALLPILOT5_FORMAT.md)
+Build the [portable C11 library](NORTEL_SBC.md#build), then pass it to the extractor. This example uses the Windows library and the Canadian English locale.
+
+~~~powershell
+python extract_callpilot5.py "CallPilot 5.0 CD Language Image.zip" build/callpilot5-en-ca --sbc-library build/nortel_sbc.dll
+~~~
+
+The portable decoder matched the factory decoder on 144,986 logical blocks across 34 locale banks. The command above exports 2,735 Canadian English WAVs and a prompt index. Use `--locale 1033` for US English. The SBC CLI also encodes 8 kHz mono PCM WAVs and decodes individual SBC files. [Codec build and usage](NORTEL_SBC.md) · [Language CD layout](CALLPILOT5_FORMAT.md)
 
 ## Extract BCM 4.0 audio
 
@@ -32,3 +38,7 @@ The [BCM 4.0 format notes](BCM4_FORMAT.md) document the indexes, audio byte layo
 ## Intake
 
 Keep each release and platform in its own intake directory. Preserve original filenames, prompt indexes and paths, and record file hashes using `inventory.py`. Use factory files without mailbox or customer recordings. The vendor files and generated audio belong in the local `intake/` and `build/` directories.
+
+## License
+
+The portable SBC code and its verification tools are MIT-licensed, copyright © 2026 Andrew Green. [License text](LICENSE-SBC.txt)

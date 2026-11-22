@@ -1,6 +1,6 @@
 # BCM 4.0 prompt format
 
-The inspected BCM 4.0 Linux image identifies itself as build `2.03a`, August 28, 2006. CallPilot's `voicemail` and the IVR's `mmf2vfs` executable are little-endian 32-bit x86 ELF. CallPilot's voice files use little-endian indexes. The IVR MMF files use big-endian indexes independently of the host architecture.
+The inspected BCM 4.0 Linux image identifies itself as build `2.03a`, August 28, 2006. CallPilot's `voicemail` and the IVR's `mmf2vfs` executable are little-endian 32-bit x86 ELF. CallPilot's voice files use little-endian indexes. The IVR MMF files use big-endian indexes independently of the host architecture. For numbered SBC prompts from the CallPilot 5.0 language CDs, see the [language CD guide](CALLPILOT5_FORMAT.md).
 
 ## CallPilot language directories
 
