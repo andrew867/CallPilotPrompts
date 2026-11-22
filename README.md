@@ -6,7 +6,7 @@ Factory-prompt format research and extraction for Nortel CallPilot and Norstar V
 
 ## Extract CallPilot 5.0 audio
 
-The two-disc CallPilot 5.0 language CD uses numbered Nortel SBC files. The Canadian English bank has 2,735 playable prompts. The extractor uses the original 32-bit Windows codec with the locally supplied language archive. See the [CallPilot 5.0 byte layout and extraction steps](CALLPILOT5_FORMAT.md).
+The two-disc CallPilot 5.0 language CD uses numbered Nortel SBC files. The Canadian English bank has 2,735 playable prompts. The portable C codec can decode the archived 18 kbit/s blocks and encode new 8 kHz mono recordings in the same format. The extractor accepts the portable library or the original 32-bit Windows codec. [Build and use the codec](NORTEL_SBC.md) · [Language CD layout](CALLPILOT5_FORMAT.md)
 
 ## Extract BCM 4.0 audio
 

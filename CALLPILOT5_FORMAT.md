@@ -18,13 +18,21 @@ Disc 1 has Canadian English `lang4105` and American English `lang1033`. Each has
 
 Each numbered speech file is a sequence of blocks. A little-endian 16-bit block size at offset 0 includes the size field itself. The next block starts at that offset plus the size. Full intervening blocks in this release are 8,176 bytes. The first logical block of Canadian `101` is 8,176 bytes and the second is 3,676 bytes. Padding in the tail belongs to the stored block. The decoder zero-pads each logical block to the 8,192-byte working buffer used by the native library.
 
-In the tested layout, bytes 2 through 6 are zero, the first frame group begins with `96` or `4E` hex, and the block ends in at least 66 zero bytes. Frames are 256 output samples each. A block yields `floor((size - 76) / 75)` frames of that size. This relationship is verified against the native decoder on every exported block. This description covers the archived prompt layout. Desktop message VBK containers and BCM 4.0 `phrase_s` have separate layouts.
+Bytes 2 through 5 are zero. At offset 6, each group starts with a big-endian length of 150 bytes (`00 96`) for two frames or 78 bytes (`00 4E`) for a final single frame. Swap adjacent bytes in the group's payload to read four half-frame lengths and their data. Length `25` hex includes the length byte and 36 data bytes. In a single-frame group, two `01` lengths mark the empty halves. The block ends with `AD DE EF BE` and 66 zero bytes.
+
+Each frame yields 256 output samples. A block contains `floor((size - 76) / 75)` frames. This description covers the archived 18 kbit/s prompt layout. Desktop message VBK containers and BCM 4.0 `phrase_s` have separate layouts. [Codec and verification details](NORTEL_SBC.md)
 
 Nortel describes its SBC for messaging as proprietary sub-band coding at 18 kbit/s. The numbered prompt files here use that decoder. [Nortel CallPilot Planning and Engineering Guide](https://www.tandemdata.com/Manuals/Nortel/Call%20Pilot/CP%204.0%20Planning%20and%20Engineering%20Guide.pdf)
 
 ## Reproduce the extraction
 
-Use a 32-bit Windows Python. `extract_callpilot5.py` calls the SBC decoder in the specific 32-bit `NMCODEC.DLL` from the BCM 4.0 Desktop Messaging client. The script verifies the DLL by SHA-256 since its internal entry point at RVA `0xDF20` is specific to that build. It neither installs nor registers the client.
+Build the [portable SBC library](NORTEL_SBC.md#build) and pass it to `extract_callpilot5.py`.
+
+~~~powershell
+python extract_callpilot5.py "CallPilot 5.0 CD Language Image.zip" build/callpilot5-en-ca --sbc-library build/nortel_sbc.dll
+~~~
+
+For comparison against the factory codec, use 32-bit Windows Python with the specific `NMCODEC.DLL` from the BCM 4.0 Desktop Messaging client. The script verifies the DLL by SHA-256 since its internal entry point at RVA `0xDF20` is specific to that build. It loads the DLL directly.
 
 In the extracted BCM 4.0 Linux system image, the installer is `srv/www/apps/public/CallPilotDesktopMessaging.exe`. Windows `tar.exe` can extract the nested client in an empty local directory.
 

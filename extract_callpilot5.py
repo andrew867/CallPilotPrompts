@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Decode the CallPilot 5.0 language CD's numbered prompts with Nortel's x86 SBC codec."""
+"""Decode the CallPilot 5.0 language CD's numbered SBC prompts."""
 
 import argparse
 import csv
@@ -8,32 +8,17 @@ import hashlib
 import json
 from pathlib import Path, PurePosixPath
 import re
-import struct
 import tempfile
 import wave
 import zipfile
+
+from nortel_sbc import Codec, SAMPLE_RATE, parse_blocks
 
 DLL_SHA256 = "c48eb80a73a91b268f78cafe8baffe0b8298ed28141a52fa71887058496be56d"
 SBC_DECODE_RVA = 0xdf20
 CODEC_BLOCK_BYTES = 8192
 PCM_BUFFER_BYTES = 65536
-SAMPLE_RATE = 8000
 SOURCE_NAME = re.compile(r"Copied encoded file (\S+) to ([0-9]+)")
-
-
-def parse_blocks(data):
-    offset = 0
-    while offset < len(data):
-        if len(data) - offset < 8:
-            raise ValueError(f"Truncated block at {offset}")
-        size = struct.unpack_from("<H", data, offset)[0]
-        if not 154 <= size <= 8176 or size % 150 not in (4, 76) or offset + size > len(data):
-            raise ValueError(f"Invalid block length {size} at {offset}")
-        block = data[offset:offset + size]
-        if block[2:7] != bytes(5) or block[7] not in (0x4e, 0x96) or any(block[-66:]):
-            raise ValueError(f"Unexpected SBC framing at {offset}")
-        yield block, (size - 76) // 75 * 256
-        offset += size
 
 
 class Decoder:
@@ -113,7 +98,8 @@ def extract(source, output, locale, decoder):
                                      len(pcm) // 2, hashlib.sha256(pcm).hexdigest() if pcm else "",
                                      wav, "exported" if pcm else "empty"))
         summary = {"locale": locale, "directory": str(base), "voice_files": len(voices),
-                   "exported": exported, "sample_rate": SAMPLE_RATE, "decoder_sha256": DLL_SHA256}
+                   "exported": exported, "sample_rate": SAMPLE_RATE,
+                   "decoder_sha256": getattr(decoder, "sha256", DLL_SHA256)}
         (staged / "manifest.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
         staged.rename(output)
     return summary
@@ -123,12 +109,15 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("language_cd_zip", type=Path)
     parser.add_argument("output", type=Path)
-    parser.add_argument("--codec", type=Path, required=True, help="Path to the verified 32-bit NMCODEC.DLL")
+    backends = parser.add_mutually_exclusive_group(required=True)
+    backends.add_argument("--sbc-library", type=Path, help="Path to the compiled portable SBC library")
+    backends.add_argument("--codec", type=Path, help="Path to the verified 32-bit NMCODEC.DLL")
     parser.add_argument("--locale", type=int, default=4105, help="Windows locale ID (default: Canadian English)")
     args = parser.parse_args()
     try:
-        summary = extract(args.language_cd_zip, args.output, args.locale, Decoder(args.codec))
-    except (OSError, ValueError, zipfile.BadZipFile, KeyError) as error:
+        decoder = Codec(args.sbc_library) if args.sbc_library else Decoder(args.codec)
+        summary = extract(args.language_cd_zip, args.output, args.locale, decoder)
+    except (AttributeError, OSError, ValueError, zipfile.BadZipFile, KeyError) as error:
         parser.exit(1, f"error: {error}\n")
     print(f"{summary['exported']} of {summary['voice_files']} voice files exported")
 
